@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Manipolazione Ematica | Choso Tracker</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-512.png">
+  <meta name="theme-color" content="#08080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <canvas id="bloodCanvas"></canvas>
+
+  <div class="app-viewport">
+    
+    <!-- HEADER HERO -->
+    <header class="choso-hero">
+      <div class="avatar-wrapper" id="avatarContainer">
+        <img src="https://static.wikia.nocookie.net/jujutsu-kaisen/images/2/27/Choso_using_Blood_Manipulation_%28Anime%29.png" alt="Choso" class="choso-avatar" id="chosoAvatar" onerror="this.src='https://via.placeholder.com/150/120e18/ff003c?text=Choso'">
+        <div class="cursed-aura"></div>
+      </div>
+      <div class="hero-titles">
+        <span class="technique-kanji">赤血操術</span>
+        <h1 class="main-title">MANIPOLAZIONE EMATICA</h1>
+        <p class="sub-title">Supervisione di Choso • Ketsueki Cycle</p>
+      </div>
+    </header>
+
+    <!-- SCHEDA 1: HOME DASHBOARD -->
+    <section id="tab-home" class="tab-page active">
+      <div class="glass-card main-status-card">
+        <div class="badge-phase" id="phaseBadge">Fase Follicolare</div>
+
+        <div class="circle-progress-container">
+          <svg class="progress-ring" width="200" height="200">
+            <circle class="progress-ring-bg" cx="100" cy="100" r="82" />
+            <circle class="progress-ring-circle" id="progressCircle" cx="100" cy="100" r="82" />
+          </svg>
+          <div class="circle-content">
+            <span class="days-count" id="countdownDays">--</span>
+            <span class="days-label">GIORNI AL CICLO</span>
+          </div>
+        </div>
+
+        <div class="cycle-metrics-grid">
+          <div class="metric-box">
+            <span class="m-val" id="currentCycleDay">--</span>
+            <span class="m-lbl">Giorno Ciclo</span>
+          </div>
+          <div class="metric-box">
+            <span class="m-val" id="periodDurationText">--</span>
+            <span class="m-lbl">Durata Flusso</span>
+          </div>
+          <div class="metric-box">
+            <span class="m-val" id="daysToOvulation">--</span>
+            <span class="m-lbl">All'Ovulazione</span>
+          </div>
+        </div>
+
+        <p class="prediction-text">Prossimo ciclo previsto: <strong id="nextDateText">--/--/----</strong></p>
+      </div>
+
+      <div class="glass-card quote-card">
+        <div class="quote-header">
+          <span class="blood-drop-icon">🩸</span>
+          <span class="quote-title">PRESIDIO DI CHOSO</span>
+        </div>
+        <p class="quote-body" id="chosoQuote">"Come tuo fratello maggiore, il mio unico dovere è proteggerti. Riposati oggi."</p>
+        <button class="btn-summon" onclick="summonChoso()">
+          ✨ Evoca la presenza di Choso
+        </button>
+      </div>
+
+      <button class="btn-primary-glow" onclick="switchTab('log')">
+        🩸 REGISTRA NUOVO GIORNO
+      </button>
+    </section>
+
+    <!-- SCHEDA 2: CALENDARIO -->
+    <section id="tab-calendar" class="tab-page">
+      <div class="glass-card">
+        <div class="calendar-header-nav">
+          <button class="cal-nav-btn" onclick="changeMonth(-1)">❮</button>
+          <h2 class="card-heading" id="calMonthTitle" style="margin:0;">Ottobre 2026</h2>
+          <button class="cal-nav-btn" onclick="changeMonth(1)">❯</button>
+        </div>
+
+        <div class="calendar-legend">
+          <span class="leg-item leg-mensile">Mestruale</span>
+          <span class="leg-item leg-follicolare">Follicolare</span>
+          <span class="leg-item leg-ovulazione">Ovulazione</span>
+          <span class="leg-item leg-luteale">Luteale</span>
+        </div>
+
+        <div class="calendar-days-header">
+          <span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+    </section>
+
+    <!-- SCHEDA 3: REGISTRO COMPLETO DA SCREENSHOT -->
+    <section id="tab-log" class="tab-page">
+      <div class="glass-card">
+        <h2 class="card-heading">Registrazione Ematica Giornaliera</h2>
+        
+        <form id="cycleForm">
+          
+          <!-- Data -->
+          <div class="input-block">
+            <label>Data Registro</label>
+            <input type="date" id="startDate" class="custom-input" required>
+          </div>
+
+          <!-- Flusso e Fine Ciclo -->
+          <div class="input-block">
+            <label>Flusso Mestruale (Flow)</label>
+            <div class="chip-selector">
+              <label class="chip-opt"><input type="radio" name="flow" value="Nessuno" checked> <span>⚪ Nessuno</span></label>
+              <label class="chip-opt"><input type="radio" name="flow" value="Leggero"> <span>🩸 Leggero</span></label>
+              <label class="chip-opt"><input type="radio" name="flow" value="Medio"> <span>🩸🩸 Medio</span></label>
+              <label class="chip-opt"><input type="radio" name="flow" value="Sekketsu Shōten (Abbondante)"> <span>💥 Abbondante</span></label>
+            </div>
+            
+            <div style="margin-top: 8px;">
+              <label class="chip-opt">
+                <input type="checkbox" id="isPeriodEnd">
+                <span style="border-color: var(--crimson-blood); background: rgba(255, 0, 60, 0.12);">🏁 Oggi è l'ultimo giorno (Fine Flusso)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Attività Sessuale (Sexual Activity) -->
+          <div class="input-block">
+            <label>Attività Sessuale & Libido</label>
+            <div class="symptoms-grid">
+              <label class="sym-chip"><input type="checkbox" name="sex" value="Rapporto Non Protetto"> <span>❤️️ Non Protetto</span></label>
+              <label class="sym-chip"><input type="checkbox" name="sex" value="Rapporto Protetto"> <span>🔒 Protetto</span></label>
+              <label class="sym-chip"><input type="checkbox" name="sex" value="Masturbazione"> <span>💖 Masturbazione</span></label>
+              <label class="sym-chip"><input type="checkbox" name="sex" value="Baci/Intimità"> <span>💋 Baci / Intimità</span></label>
+              <label class="sym-chip"><input type="checkbox" name="sex" value="Libido Alta"> <span>📈 Libido Alta</span></label>
+              <label class="sym-chip"><input type="checkbox" name="sex" value="Libido Bassa"> <span>📉 Libido Bassa</span></label>
+            </div>
+          </div>
+
+          <!-- Sintomi: Testa & Viso (Head & Face) -->
+          <div class="input-block">
+            <label>Testa & Viso</label>
+            <div class="symptoms-grid">
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Mal di testa"> <span>🤯 Mal di testa</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Emicrania"> <span>💥 Emicrania</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Capogiri"> <span>💫 Capogiri</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Acne"> <span>🌋 Acne</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Pelle Chiara"> <span>✨ Pelle Chiara</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Eruzione Cutanea"> <span>🔴 Eruzione Cutanea</span></label>
+            </div>
+          </div>
+
+          <!-- Sintomi: Corpo & Generali (Body & General) -->
+          <div class="input-block">
+            <label>Corpo & Dolori</label>
+            <div class="symptoms-grid">
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Crampi Addominali"> <span>⚡ Crampi Addominali</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Mal di Schiena"> <span>🦴 Mal di Schiena</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Dolori Muscolari"> <span>💪 Dolori Diffusi</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Seno Sensibile"> <span>🌸 Seno Sensibile</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Dolore Spalle"> <span>🧘 Dolore Spalle</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Dolore Ovulazione"> <span>🎯 Dolore Ovulazione</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Brividi"> <span>🥶 Brividi</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Vampate"> <span>🔥 Vampate</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Febbre"> <span>🌡️ Febbre</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Aumento Peso"> <span>⚖️ Aumento Peso</span></label>
+            </div>
+          </div>
+
+          <!-- Digestione (Digestion) -->
+          <div class="input-block">
+            <label>Digestione</label>
+            <div class="symptoms-grid">
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Gonfiore"> <span>🫄 Gonfiore</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Flatulenza"> <span>💨 Flatulenza</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Stitichezza"> <span>😣 Stitichezza</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Diarrea"> <span>🧻 Diarrea</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Nausea"> <span>🤢 Nausea</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Reflusso"> <span>🔥 Reflusso</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Voglia di Cibo"> <span>🍫 Voglie</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Molta Fame"> <span>🍔 Molta Fame</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Poco Appetito"> <span>🍽️ Inappetenza</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Mal di Stomaco"> <span>🤢 Mal di Stomaco</span></label>
+            </div>
+          </div>
+
+          <!-- Sonno & Energia (Sleep & General) -->
+          <div class="input-block">
+            <label>Sonno & Energia</label>
+            <div class="symptoms-grid">
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Stanchezza"> <span>🪫 Stanchezza</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Insonnia"> <span>🌙 Insonnia</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Sonno Disturbato"> <span>🛌 Sonno Scarso</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Sudorazione Notturna"> <span>💦 Sudori Notturni</span></label>
+            </div>
+          </div>
+
+          <!-- Perdite & Cervice (Discharge & Cervix) -->
+          <div class="input-block">
+            <label>Perdite & Cervice</label>
+            <div class="symptoms-grid">
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Nessuna Perdita"> <span>🚫 Nessuna Perdita</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Perdite Appiccicose"> <span>🌾 Appiccicose</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Perdite Cremose"> <span>🍦 Cremose</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Perdite Acquose"> <span>🌊 Acquose</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Perdite Albume"> <span>🥚 Albume (Fertile)</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Perdite Ematiche"> <span>🩸 Con Sangue / Spotting</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Secchezza Vaginale"> <span>🌵 Secchezza</span></label>
+              <label class="sym-chip"><input type="checkbox" name="symptoms" value="Irritazione Vaginale"> <span>🔥 Irritazione</span></label>
+            </div>
+          </div>
+
+          <!-- Umore Positivo (Positive Moods) -->
+          <div class="input-block">
+            <label>Umore Positivo</label>
+            <div class="symptoms-grid">
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Felice"> <span>😊 Felice</span></label>
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Innamorata"> <span>😍 Innamorata</span></label>
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Pacifica"> <span>😇 Peaceful</span></label>
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Rilassata"> <span>😌 Rilassata</span></label>
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Energetica"> <span>🤩 Entusiasta</span></label>
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Fiduciosa"> <span>Fiduciosa</span></label>
+            </div>
+          </div>
+
+          <!-- Umore Negativo / Neutro (Negative Moods) -->
+          <div class="input-block">
+            <label>Umore Negativo / Neutro</label>
+            <div class="symptoms-grid">
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Normale"> <span>😐 Normale</span></label>
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Ansiosa"> <span>😰 Ansiosa</span></label>
+
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Triste"> <span>😢 Triste</span></label>
+
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Irritabile"> <span>🤬 Irritabile</span></label>
+
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Arrabbiata"> <span>😡 Arrabbiata</span></label>
+
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Stressata"> <span>🤯 Stressata</span></label>
+
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Tesa"> <span>⚡ Tesa</span></label>
+
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Depressa"> <span>😞 Depressa</span></label>
+
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Apatica"> <span>😶 Indifferente</span></label>
+
+              <label class="sym-chip"><input type="checkbox" name="moods" value="Inquieta"> <span>😵‍💫 Confusa</span></label>
+
+            </div>
+          </div>
+
+          <!-- Contraccezione, Farmaci & Dati Fisici -->
+          <div class="input-block">
+            <label>Contraccezione, Farmaci & Dati Fisici</label>
+            <div class="chip-selector" style="margin-bottom: 8px;">
+              <label class="chip-opt"><input type="checkbox" id="pillToday" value="Pillola Oggi"> <span>💊 Pillola Oggi</span></label>
+              <label class="chip-opt"><input type="checkbox" id="pillYesterday" value="Pillola Ieri"> <span>💊 Pillola Ieri</span></label>
+            </div>
+            <input type="text" id="medicineInput" placeholder="Farmaci assunti (es. Ibuprofene)..." class="custom-input" style="margin-bottom:8px;">
+            <div class="inline-inputs">
+              <input type="number" step="0.1" id="tempInput" placeholder="Temp (°C)" class="custom-input">
+              <input type="number" step="0.1" id="weightInput" placeholder="Peso (kg)" class="custom-input">
+            </div>
+            <textarea id="notesInput" placeholder="Note libere o pensieri della giornata..." class="custom-input textarea-input"></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary-glow">SALVA REGISTRAZIONE</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- SCHEDA 4: STORICO -->
+    <section id="tab-history" class="tab-page">
+      <div class="glass-card">
+        <div class="history-header-actions">
+          <h2 class="card-heading" style="margin:0;">Storico Registrazioni</h2>
+          <button onclick="clearAllHistory()" class="btn-danger-sm">🗑️ Elimina Tutto</button>
+        </div>
+        <div class="history-container" id="historyList"></div>
+      </div>
+    </section>
+
+    <!-- BARRA DI NAVIGAZIONE -->
+    <nav class="neon-navbar">
+      <button class="nav-btn active" onclick="switchTab('home')">
+        <span class="nav-icon">🔮</span>
+        <span>Home</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('calendar')">
+        <span class="nav-icon">📅</span>
+        <span>Fasi</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('log')">
+        <span class="nav-icon">🩸</span>
+        <span>Registra</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('history')">
+        <span class="nav-icon">📜</span>
+        <span>Storico</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
